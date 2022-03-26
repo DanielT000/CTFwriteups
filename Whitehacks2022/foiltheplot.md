@@ -35,7 +35,7 @@ print(password)
 
 Using the password `q2gdp1xq1hrqnjhi04zrpg94dq7kwb5by5gynpoz`, we successfully pass the login.
 
-![image](https://user-images.githubusercontent.com/26357716/160227433-eb639853-672d-44ce-922c-e73bf5cee5bf.png)
+![image](https://user-images.githubusercontent.com/26357716/160227672-aaa82e69-810d-47fa-a2c3-09b10526b3e7.png)
 
 We receive a message.
 
@@ -45,24 +45,23 @@ Upon exploring further, if you hover your cursor below the image, the following 
 
 Base64 decoded: `PLAINTEXT <==> (AES-CBC, SHA-256(1st segment), SHA-256(2nd segment)) <==> CIPHERTEXT`
 
-This means that we are supposed to use the SHA256 hashes of the 1st and 2nd segments as the key and nonce respectively for AES decryption.
+This means that we are supposed to use the SHA256 hashes of the 1st and 2nd segments as the key and nonce respectively to AES decrypt the message.
 
 After doing so with a simple script:
 
 ```python
+import hashlib
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
 import base64
 
+def sha256(x):
+    return hashlib.sha256(x).digest()
 p1 = b"q2gdp1xq1hrqnjhi04zr"
 p2 = b"pg94dq7kwb5by5gynpoz"
 key = sha256(p1)
 iv = sha256(p2)
-
-a = "xXJmIS3Tk+uIf5L/g801edMzwC4UFYZj1UYbaRXsm7tmJNsupUZzLPL/r4wlPacnBkf7ics0F9tjbYxEnophYGBF/7Yts83665OIAZwnM2o3KsTzvQKUgXnexvS8TWEGiAjPd+As/bCTzl/mx87YNw=="
-
-s = base64.b64decode(a)
-
+ct = "xXJmIS3Tk+uIf5L/g801edMzwC4UFYZj1UYbaRXsm7tmJNsupUZzLPL/r4wlPacnBkf7ics0F9tjbYxEnophYGBF/7Yts83665OIAZwnM2o3KsTzvQKUgXnexvS8TWEGiAjPd+As/bCTzl/mx87YNw=="
+s = base64.b64decode(ct)
 cipher = AES.new(key, mode=AES.MODE_CBC, iv=iv[:16])  
 msg = cipher.decrypt(s)
 print(msg)
