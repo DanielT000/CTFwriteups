@@ -15,12 +15,12 @@ def sha256(x):
 def getcollision():
     d = dict()
     for i in range(2000000):
-        if (i % 100000 == 0):
-            print(i)
+        if (i % 100000 == 0):       # just to keep track
+            print(i) 
         s = "".join(random.choices(chars,k=20))
         s = s.encode()
 
-        p = sha256(s)[-5:]
+        p = sha256(s)[-5:]          # last 5 bytes of hash
 
         if (p in d):
             print(p, d[p], s, sha256(s), sha256(d[p]))
