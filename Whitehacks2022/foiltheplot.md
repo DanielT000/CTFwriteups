@@ -1,8 +1,16 @@
-> TODO: add chal description
+## (CSA) Foil the Plot
 
-We need to find a SHA256 collision in the last 5 bytes. This is `5*8 = 40` bits, but by the birthday problem we should be able to get a collision in `sqrt(2^40) = 2^20 ~= 1000000` such hashes.
+> Missing challenge description, but its some plot about information hidden behind a log in screen. 
+> 
+> The page authenticates passwords by:
+>    - Splitting the 40-character password into 2 segments.
+>    - Checking if the SHA256 hashes of both segments match in their last 5 bytes.
+>
+>  After that, we are supposed to get an ID and a postal code for a location.
 
-We store the last 5 bytes of every hash we have found in a dictionary, and whenever we generate a new hash, we check if the last 5 bytes is in the dictionary. If so, we have found a collision and thus we have the password.
+We need to find a hash collision in the last 5 bytes of SHA256 hashes. This is `5*8 = 40` bits, but by the birthday problem we should be able to get a collision in `sqrt(2^40) = 2^20 ~= 1000000` such hashes.
+
+We store the last 5 bytes of every hash we have found in a dictionary, and whenever we generate a new hash, we check if the last 5 bytes is a key in the dictionary. If so, we have found a collision and thus we have the password.
 
 ```python
 import hashlib
