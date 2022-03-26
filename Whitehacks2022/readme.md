@@ -5,27 +5,27 @@ I participated in Whitehacks 2022, and here are the brief writeups for the simpl
 Harder cryptography challenges will have separate, more detailed writeups but will be listed in the table of contents for reference.
 
 ## Table of Contents
-1. [Miscellaneous](#misc)
+1. [Miscellaneous](#miscellaneous)
    1. [Read The RULES](#read-the-rules)
    2. [Sanity Check](#sanity-check)
    3. [Catch the theiFS](#catch-the-theifs)
    4. [Never Gonna Stitch You Up](#never-gonna-stitch-you-up)
    5. [Escape Plane](#escape-plane)
    6. [Garbage Runner](#garbage-runner)
-2. [Forensics](#foren)
+2. [Forensics](#forensics)
    1. [The Prompt Within](#the-prompt-within)
    2. [Jack's Rival](#jacks-rival)
    3. [Do the Shimmy!](#do-the-shimmy)
-3. [Reverse Engineering](#rev)
+3. [Reverse Engineering](#reverse-engineering)
    1. [the floor is java](#the-floor-is-java)
-4. [Cryptography](#crypto)
+4. [Cryptography](#cryptography)
    1. [Really S1mp(l3) Algorithm](#really-s1mpl3-algorithm)
    2. [The Indecipherable Cipher](#the-indecipherable-cipher)
    3. [The Poem of Knowledge](#the-poem-of-knowledge)
    4. [Ridiculously Simpler Algorithm](#ridiculously-simpler-algorithm)
-   5. [Meet where? Middle Road?](#meet-where-middle-road)
-   6. (CSIT) [Foil the Plot](#foil-the-plot)
-   7. [Booleancrypt](#booleancrypt)
+   5. [Meet where? Middle Road?](meetwheremiddleroad.md)
+   6. (CSIT) [Foil the Plot](foiltheplot.md)
+   7. [Booleancrypt](booleancrypt.md)
 
 
 
@@ -328,6 +328,6 @@ b'\x0b\x8fhN.>`k\xe5-\xed\xfb\xac\x91\xfa\xf4\xf1\xdd\xe8X\xd5\xc5\x0f\xf7\x01\x
 
 Seems like garbage, but lets look at `m`.
 
-You can manually split the string `m` to get a bunch of ascii decimal values. 
+You can manually split the string `m` to get a bunch of ascii decimal values, and decode using [CyberChef](https://gchq.github.io/CyberChef/#recipe=From_Decimal('Space',false)&input=ODcgNzIgNTAgNDggNTAgNTAgMTIzIDEwNCA0OCAxMTkgOTUgMTAwIDUyIDExNCA1MSA5NSAxMjEgNDggMTE3IDk1IDk5IDExNCA1MiA5OSAxMDcgOTUgMTA5IDUxIDk1IDExNiAxMTkgNDkgOTkgNTEgMTI1). 
 
 `87 72 50 48 50 50 123 104 48 119 95 100 52 114 51 95 121 48 117 95 99 114 52 99 107 95 109 51 95 116 119 49 99 51 125` --> `WH2022{h0w_d4r3_y0u_cr4ck_m3_tw1c3}`
