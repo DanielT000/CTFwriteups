@@ -1,4 +1,4 @@
-## (CSA) Foil the Plot
+## (CSIT) Foil the Plot
 
 > Missing challenge description, but its some plot about information hidden behind a log in screen. 
 > 
