@@ -98,7 +98,9 @@ If they do, we OR `res` and `ans` to uncover more 1s in X.
 
 Note that we still do not know if the results we are using all are from AND queries or all from NOR queries.
 
-However, notice that `X NOR random_bit_string = NOT(X) AND NOT(random_bit_string) = NOT(X) AND effectively_another_random_bit_string`, hence if we used all NOR queries we just need to flip all the bits in `ans`. We can just write both `ans` and `NOT(ans)` to files.
+However, notice that `X NOR Y = NOT(X) AND NOT(Y) = NOT(X) AND Y2`, where `Y` and `Y2` are effectively both random bitstring.
+
+Hence if we used all NOR queries, we just need to flip all the bits in `ans`. We can just write both `ans` and `NOT(ans)` to files and see which one works.
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
