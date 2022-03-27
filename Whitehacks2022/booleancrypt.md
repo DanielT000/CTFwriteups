@@ -1,6 +1,6 @@
 ## Booleancrypt
 
-> Missing challenge description, but its not too important.
+> This little fellow seems to be in charge of their encryption module, here are his insides!
 
 Source:
 ```python
