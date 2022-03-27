@@ -84,9 +84,9 @@ How do we distinguish between them?
 | 1 | 0 | 0 | 0 | 
 | 1 | 1 | 1 | 0 | 
 
-Notice that for AND results, 1 occurs if the corresponding bit in X is 1.
+Notice that for AND results, 1 occurs _only if_ the corresponding bit in X is 1.
 
-For NOR results, 1 occurs only if the corresponding bit in X is 0.
+For NOR results, 1 occurs _only if_ the corresponding bit in X is 0.
 
 Thus AND and NOR results will never have common 1 bits.
 
