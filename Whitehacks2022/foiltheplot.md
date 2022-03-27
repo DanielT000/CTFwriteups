@@ -1,12 +1,18 @@
 ## (CSIT) Foil the Plot
 
-> Missing challenge description, but its some plot about information hidden behind a log in screen. 
+> APOCALYPSE activated a sleeper cell for a suicide bombing but the target location is not known.....
 > 
-> The page authenticates passwords by:
->    - Splitting the 40-character password into 2 segments.
->    - Checking if the SHA256 hashes of both segments match in their last 5 bytes.
->
->  After that, we are supposed to get an ID and a postal code for a location.
+> Experts from CSIT have discovered the attacker-controlled server that was used to send a secret message to the sleeper cell. 
+> 
+> The server is protected with a password that is at least 40 chars long! The server does not store the password but to our good fortune, a weakness has been discovered in the way it performs the authentication.
+> 
+> It validates the password by performing the following steps:
+> - Split the 40 char password into 2 equally-sized segments
+> - Check that the segments are not identical
+> - Generate the SHA-256 digests of both segments
+> - Check that the last 5 bytes of both digests are identical
+> 
+> Your task is to gain authentication to the server, decipher the message and determine the target location before it's too late!
 
 We need to find a hash collision in the last 5 bytes of SHA256 hashes. This is `5*8 = 40` bits, but by the birthday problem we should be able to get a collision in `sqrt(2^40) = 2^20 ~= 1000000` such hashes.
 
