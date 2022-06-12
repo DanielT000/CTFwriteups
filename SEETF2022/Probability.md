@@ -61,7 +61,7 @@ In this challenge, we play a modified game of [blackjack](https://en.wikipedia.o
 The goal is to win 800 out of 1337 games.
 
 ### Part 1: Predicting random numbers
-Upon inspecting the source, we see that the outputs are obtained via the `random.random()` function.
+Upon inspecting the source, we see that the floats are obtained via the `random.random()` function.
 
 A quick look at the `random` library gives us this warning:
 > Warning: The pseudo-random generators of this module should not be used for security purposes. For security or cryptographic uses, see the secrets module.
@@ -92,10 +92,10 @@ I found that giving around 1300 partial outputs (i.e 650 floats) to the `Untwist
 A nice optimisation I found to obtain more floats is that it is always optimal to hit while our current total is less than 0.5. 
 
 This is because:
-1) If we do not bust, we can continue playing and getting outputs, which is good.
+1) If we do not bust, we can continue playing and getting floats, which is good.
 2) If we do bust, that means that we got a float > 0.5 (because our current total was < 0.5).
-    - If we had stood instead, the dealer would have beat us using only 1 float (the same one we got).
-    - This reveals the same number of outputs anyway.
+    - If we had stood instead, the dealer would have beat us using only 1 float (the same one we drew).
+    - This reveals the same number of floats anyway.
 
 As such, my strategy to obtain outputs consisted of hitting until my current total was > 0.5, and then standing.
 
