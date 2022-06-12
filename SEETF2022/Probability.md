@@ -103,7 +103,9 @@ As such, my strategy to obtain outputs consisted of hitting until my current tot
 ### Part 2: Dynamic programming
 
 Now that we have cracked the random number generator, we will know all future outputs. We can then plan out our moves to win as many games as possible.
+
 This is also possible because we know the dealer's algorithm from the source, which is to keep hitting until either they bust or they beat our total. 
+
 This means that we can 
     1) Simulate hitting x times
     2) If we do not bust, simulate the dealer's moves
