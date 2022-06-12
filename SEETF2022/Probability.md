@@ -89,15 +89,15 @@ As such, each float we get gives us around 53 bits of information we can feed in
 
 I found that giving around 1300 partial outputs (i.e 650 floats) to the `Untwister` was enough to correctly predict the rest of the outputs, so we will have to play the game normally for around 200 rounds, trying to obtain as many floats as possible. 
 
-A nice optimisation I found to obtain more floats is that it is always optimal to hit while your current total is less than 0.5. 
+A nice optimisation I found to obtain more floats is that it is always optimal to hit while our current total is less than 0.5. 
 
 This is because:
 1) If we do not bust, we can continue playing and getting outputs, which is good.
-2) If we do bust, that means that we got a float > 0.5 (because our current total is < 0.5).
-    - If we had stayed, the dealer would have beat us using only 1 float (the same one we drew).
+2) If we do bust, that means that we got a float > 0.5 (because our current total was < 0.5).
+    - If we had stood instead, the dealer would have beat us using only 1 float (the same one we got).
     - This reveals the same number of outputs anyway.
 
-As such, my strategy to obtain outputs consisted of hitting until my current total was > 0.5, and then staying.
+As such, my strategy to obtain outputs consisted of hitting until my current total was > 0.5, and then standing.
 
 
 ### Part 2: Dynamic programming
@@ -122,7 +122,7 @@ import time
 import logging
 import sys
 from pwn import *
-sys.setrecursionlimit(4000)
+sys.setrecursionlimit(4000)   # for the dp to run
 
 logging.basicConfig(format='STT> %(message)s')
 logger = logging.getLogger()
@@ -259,7 +259,7 @@ while (ct <= 1300):                         # obtain around 1300 outputs
     
     r.recvline()
     x = r.recvuntil(b" ")[:-1].decode()
-    if (x != "You"):                        # if we did not bust, the dealer will play and we will get more floats
+    if (x != "You"):                        # if we did not bust, we can stand, the dealer will play and we will get more floats
         r.sendline(b"s")
         RES = r.recvuntil(b"Score: ").decode()
         search = re.findall('\[(.*)\]', RES, re.IGNORECASE) # extract the floats from the dealer's turn
