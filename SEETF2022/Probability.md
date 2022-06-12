@@ -57,7 +57,8 @@ if __name__ == '__main__':
     main()
 ```
 
-In this challenge, we play a game of blackjack with the server, where we obtain outputs between 0 and 1 and try to not exceed a sum of 1. The goal is to win 800 out of 1337 games.
+In this challenge, we play a modified game of [blackjack](https://en.wikipedia.org/wiki/Blackjack) with the server, where we obtain outputs between 0 and 1 and try to not exceed a sum of 1 (busting) while also beating the dealer's sum. 
+The goal is to win 800 out of 1337 games.
 
 ### Part 1: Predicting random numbers
 Upon inspecting the source, we see that the outputs are obtained via the `random.random()` function.
@@ -65,9 +66,14 @@ Upon inspecting the source, we see that the outputs are obtained via the `random
 A quick look at the `random` library gives us this warning:
 > Warning: The pseudo-random generators of this module should not be used for security purposes. For security or cryptographic uses, see the secrets module.
 
-The `random` library uses the Mersenne Twister as the generator, which is not cryptographically secure and given 624 known 32-bit outputs, we can predict the rest of the outputs.
-Usually, I use [this library by kmyk](https://github.com/kmyk/mersenne-twister-predictor/blob/master/mt19937predictor.py) but this only provides an implementation for the function `getrandbits(32)`, while this challenge uses `random()`. Thankfully, I also found [this library by icemonster](https://github.com/icemonster/symbolic_mersenne_cracker) that allows us to enter in partial outputs from the random generator and it will help us find the best guess. 
+The `random` library uses the Mersenne Twister as the generator, which is not cryptographically secure. It well known that given 624 known 32-bit outputs, we can predict future outputs.
+
+Usually, I use [this library by kmyk](https://github.com/kmyk/mersenne-twister-predictor) but this only provides an implementation for the function `getrandbits(32)`, while this challenge uses `random()`.
+
+Thankfully, I also found [this library by icemonster](https://github.com/icemonster/symbolic_mersenne_cracker) that allows us to enter in partial outputs from the random generator and it will help us find the best guess. 
+
 All that is left to do is to find out how exactly a random number is generated in the `random()` function.
+
 From kmyk's library and also [the actual code](https://github.com/python/cpython/blob/530f506ac91338b55cf2be71b1cdf50cb077512f/Modules/_randommodule.c) from the `random` library, we find something like this:
 ```python
 def random(self):
@@ -81,9 +87,31 @@ Thus, to generate a random number between 0.0 and 1.0, two 32-bit integers are g
 
 As such, each float we get gives us around 53 bits of information we can feed into the Mersenne cracker, and this is implemented in the `parse_float()` function in the solve script.
 
+I found that giving around 1300 partial outputs (i.e 650 floats) to the `Untwister` was enough to correctly predict the rest of the outputs, so we will have to play the game normally for around 200 rounds, trying to obtain as many floats as possible. 
+
+A nice optimisation I found to obtain more floats is that it is always optimal to hit while your current total is less than 0.5. 
+
+This is because:
+1) If we do not bust, we can continue playing and getting outputs, which is good.
+2) If we do bust, that means that we got a float > 0.5 (because our current total is < 0.5).
+    - If we had stayed, the dealer would have beat us using only 1 float (the same one we drew).
+    - This reveals the same number of outputs anyway.
+
+As such, my strategy to obtain outputs consisted of hitting until my current total was > 0.5, and then staying.
+
+
 ### Part 2: Dynamic programming
 
-TODO:
+Now that we have cracked the random number generator, we will know all future outputs. We can then plan out our moves to win as many games as possible.
+This is also possible because we know the dealer's algorithm from the source, which is to keep hitting until either they bust or they beat our total. 
+This means that we can 
+    1) Simulate hitting x times
+    2) If we do not bust, simulate the dealer's moves
+    3) Calculate the outcome of the round (we win if and only if we do not bust and the dealer does)
+    
+After each round, the "starting point" for the next round is different, and we can solve this subproblem similarly. We can repeat this until we have exhausted all our remaining games (the base case).
+
+This can be done with [dynamic programming](https://en.wikipedia.org/wiki/Dynamic_programming) and backtracking, implemented in the `dp()` and `backtrack()` methods with memoisation.
 
 Solve script:
 ```python
@@ -102,7 +130,7 @@ logger.setLevel(logging.DEBUG)
 
 SYMBOLIC_COUNTER = count()
 
-class Untwister:
+class Untwister:           # copied from icemonster's repo: https://github.com/icemonster/ymbolic_mersenne_cracker
     def __init__(self):
         name = next(SYMBOLIC_COUNTER)
         self.MT = [BitVec(f'MT_{i}_{name}', 32) for i in range(624)]
@@ -197,86 +225,68 @@ class Untwister:
         r.setstate(result_state)
         return r
 
-
-def test():
-    '''
-        This test tries to clone Python random's internal state, given partial output from getrandbits
-    '''
-
-    r1 = Random()
-    ut = Untwister()
-    for _ in range(1337):
-        random_num = r1.getrandbits(16)
-        #Just send stuff like "?11????0011?0110??01110????01???"
-            #Where ? represents unknown bits
-        ut.submit(bin(random_num)[2:] + '?'*16)
-
-    r2 = ut.get_random()
-    for _ in range(624):
-        assert r1.getrandbits(32) == r2.getrandbits(32)
-
-    logger.debug('Test passed!')
-
-
 # Part 1
 
-def parse_float(random_num):
+def parse_float(random_num):                # each float is generated from two 32-bit outputs
     random_num = int(random_num*(1<<53))
     x1 = random_num >> 26
     x2 = random_num % (1<<26)
     ut.submit(format(x1,"08b") + '?'*5)
     ut.submit(format(x2,"08b")+ '?'*6)
+    
+def read_float():                           # receive float outputs from interaction
+    r.recvuntil(b"[")
+    return float(r.recvuntil(b"]")[:-1].decode())
 
 r = remote("fun.chall.seetf.sg",30001)
 ut = Untwister()    
 ct = 0
 games = 0
 
-while (ct <= 1300):
+while (ct <= 1300):                         # obtain around 1300 outputs
     cur_total = 0
-    r.recvuntil(b"[")
-    f = float(r.recvuntil(b"]")[:-1].decode())
+    f = read_float()
     parse_float(f)
     cur_total += f
-    ct += 2
+    ct += 2                                 # each float gives us 2 outputs
     
-    while (cur_total < 0.5):
+    while (cur_total < 0.5):                # keep hitting while our total is less than 0.5 to maximise number of floats we can get
         r.sendline(b"h")
-        r.recvuntil(b"[")
-        f = float(r.recvuntil(b"]")[:-1].decode())
+        f = read_float()
         parse_float(f)
         cur_total += f
         ct += 2
     
     r.recvline()
     x = r.recvuntil(b" ")[:-1].decode()
-    if (x != "You"):
+    if (x != "You"):                        # if we did not bust, the dealer will play and we will get more floats
         r.sendline(b"s")
         RES = r.recvuntil(b"Score: ").decode()
-        search = re.findall('\[(.*)\]', RES, re.IGNORECASE)
+        search = re.findall('\[(.*)\]', RES, re.IGNORECASE) # extract the floats from the dealer's turn
         for x in search:
             parse_float(float(x))
             ct += 2
     else:
-    	RES = r.recvuntil(b"Score: ").decode()
-    	
+        RES = r.recvuntil(b"Score: ").decode()
+        
     score = r.recvline()[:-1].decode()
     games += 1
     if (games % 20  == 0):
-    	print(score)
+        print(score)                        # progress check
         
 print(ct)
 r2 = ut.get_random()
 
 # Part 2
 
-def sim_opp(cur_total, cur):
+def sim_opp(cur_total, cur):                # simulate the opponent's moves, 
+                                              given that the outputs start from index cur and we have a sum of cur_total.
     opp_total = 0
     opp_cur = cur
-    while (opp_total < cur_total):
+    while (opp_total < cur_total):          # they keep hitting until they beat our total
         opp_total += outputs[opp_cur]
         opp_cur += 1
-    if (opp_total > 1):
+    if (opp_total > 1):                     # if they bust, we win
         return 1, opp_cur
     else:
         return 0, opp_cur
@@ -284,23 +294,23 @@ def sim_opp(cur_total, cur):
 mem = {}
 
 def dp(s, games):
-    if (games == 0): return 0
-    if ((s, games) in mem):
+    if (games == 0): return 0               # base case
+    if ((s, games) in mem):                 # memoisation
         return mem[(s, games)]
     cur = s
     cur_total = 0
     ret = 0
-    while (cur_total + outputs[cur] < 1):
+    while (cur_total + outputs[cur] < 1):   # simulate all possible number of times to hit while not busting
         cur_total += outputs[cur]
         cur += 1
-        k, nw = sim_opp(cur_total, cur)
-        ret = max(ret, k + dp(nw, games-1))
+        k, nw = sim_opp(cur_total, cur)     # simulate the opponent's moves, get the result and the new starting point
+        ret = max(ret, k + dp(nw, games-1)) # recurse to the next round and try to maximum number of wins
     #print(s, ret)
     mem[(s,games)] = ret
     return ret
     
 def backtrack(s, games):
-    res = dp(s,games)
+    res = dp(s,games) 
     cur = s
     cur_total = 0
     ct = 0
@@ -309,44 +319,45 @@ def backtrack(s, games):
         cur_total += outputs[cur]
         cur += 1
         k, nw = sim_opp(cur_total, cur)
-        if (res == k + dp(nw,games-1)):
+        if (res == k + dp(nw,games-1)):     # if this gives us the optimal solution we calculated earlier
             return ct
     
 
-outputs = [r2.random() for i in range(6000)]
-print(dp(0, 1337-games))
+outputs = [r2.random() for i in range(6000)]   # predict future outputs
+print(dp(0, 1337-games))                       # dp to find the max number of rounds we can win amongst the remaining rounds
 
 cur = 0
 
-for i in range(1337-games):
+for i in range(1337-games):                    # play remaining games optimally
     
-    num = backtrack(cur, 1187-i)
+    num = backtrack(cur, 1337-games-i)         # backtrack to find optimal number of times to hit
     cur_total = 0
-    r.recvuntil(b"[")
-    f = float(r.recvuntil(b"]")[:-1].decode())
-    assert(abs(f - outputs[cur] ) < 1e-5)
+    f = read_float()
+    assert(abs(f - outputs[cur] ) < 1e-5)      # ensure we predicted correctly
     cur += 1
     cur_total += f
     for _ in range(num-1):
         r.sendline(b"h")
-        r.recvuntil(b"[")
-        f = float(r.recvuntil(b"]")[:-1].decode())
-        assert(abs(f - outputs[cur] ) < 1e-5)
+        f = read_float()
+        assert(abs(f - outputs[cur] ) < 1e-5)  # ensure we predicted correctly
         cur_total += outputs[cur]
         cur += 1
-    
     
     r.sendline(b"s")
     RES = r.recvuntil(b"Score: ").decode()
     search = re.findall('\[(.*)\]', RES, re.IGNORECASE)
     for x in search:
-        assert(abs(float(x) - outputs[cur] ) < 1e-5)
+        assert(abs(float(x) - outputs[cur]) < 1e-5) # ensure we predicted correctly
         cur += 1
         
     score = r.recvline()[:-1].decode()
     myscore = int(score.split("-")[0])
-    if (i%20 == 0):
+   
+    if (i%20 == 0):                            # progress check
         print(score)
-    if (myscore >= 800):
-        r.interactive()
+        
+    if (myscore >= 800):                       # we win, get flag
+        r.interactive() 
 ```
+
+Flag: `SEE{1337_card_counting_24ca335ed1cabbcf}`
