@@ -30,7 +30,7 @@ Firstly, we know that multiplication is just repeated addition, so we can split 
 
 ### Case 1: `R0` non-negative
 In this case, we can run a simple loop to add the value in `R1` to some sum variable (we will use `R2`) `R0` times.
-In each iteration, we decrement `R0`, add `R1` to `R2`, and continue the loop if it is not zero.
+In each iteration, we decrement `R0`, add `R1` to `R2`, and continue the loop if `R0` is not zero.
 
 ```
 ADD 9 0          # store the value of R0 in R9 to be used so we can keep it for later
@@ -47,7 +47,7 @@ If `R0` is negative, the above solution will actually never terminate as `R0` wi
 If we negate `R0` and clone it, we can run the same code as above which will terminate because the new `R0` will be positive.
 We will also need to negate the result we get if we are in this "negated clone".
 
-To determine if we are in a "negated clone", we can check if our 
+To determine if we are in a "negated clone", we can check if the sum of our supposedly negated value and our original value is equal to 0.
 
 The following pseudocode will negate `R0`, and then determine if we are in the original or the "negated clone".
 ```
