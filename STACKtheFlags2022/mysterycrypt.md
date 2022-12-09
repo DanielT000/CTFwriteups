@@ -72,7 +72,7 @@ Briefly,
 $$F(l,r) = (r, l \oplus \text{res})$$ where $\oplus$ denotes the XOR operator. How `res` is derived does not matter too much at this point.
 
 
-Importantly, with any input `(l,r)` to `F` we know 16 bits of the output, which is `r`. However, since `encrypt` does `F` 128 times, we still do not know anything about the output of `encrypt` given an input.
+Importantly, with the input `(l,r)` is linked to the output `F(l,r)` (the value of `r` is unchanged, just moved). However, since `encrypt` does `F` 128 times, we still do not know anything about the output of `encrypt` given an input.
 
 ### Part 1
 
