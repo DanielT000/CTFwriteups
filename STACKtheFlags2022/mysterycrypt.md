@@ -72,16 +72,16 @@ Briefly,
 $$F(l,r) = (r, l \oplus \text{res})$$ where $\oplus$ denotes the XOR operator. How `res` is derived does not matter too much at this point.
 
 
-Importantly, with the input `(l,r)` is linked to the output `F(l,r)` (the value of `r` is unchanged, just moved). However, since `encrypt` does `F` 128 times, we still do not know anything about the output of `encrypt` given an input.
+Importantly, with the input `(l, r)` is linked to the output `F(l, r)` (the value of `r` is unchanged, just moved). However, since `encrypt` does `F` 128 times, we still do not know anything about the output of `encrypt` given an input.
 
 ### Part 1
 
-Let us consider $F(0,0)$. The notation is slightly inaccurate for brevity; technically I am supposed to write $F((0,0))$ instead of $F(0,0)$.
+Let us consider $F(0,0)$. The notation is slightly inaccurate for brevity; technically I am supposed to write $F((0, 0))$ instead of $F(0, 0)$.
 
-We have $F(0,0) = (0, \text{res})$ from earlier, since $0 \oplus \text{res} = \text{res}$.
-This gives us $2^{16} = 65536$ possible values of `res` to try, and we are guaranteed that one of them is the correct output of $F(0,0)$. Let this value of `res` be `x`.
+We have $F(0, 0) = (0, \text{res})$ from earlier, since $0 \oplus \text{res} = \text{res}$.
+This gives us $2^{16} = 65536$ possible values of `res` to try, and we are guaranteed that one of them is the correct output of $F(0, 0)$. Let this value of `res` be `x`.
 
-Now that we have $(0,x) = F(0,0)$, let us look at what happens if we encrypt `(0,x)`. Since `encrypt` calls `F` 128 times on our input, we have:
+Now that we have $(0, x) = F(0, 0)$, let us look at what happens if we encrypt `(0, x)`. Since `encrypt` calls `F` 128 times on our input, we have:
 
 $$
 \begin{alignat*}{4}
@@ -105,7 +105,7 @@ res = mod((ror(r,4) ^ rol(r,5) ^ k1) + r) ^ mod(k2 + r + delta)
 ```
 
 where `ror` and `rol` are "rotating" kind of functions, and the `mod` functions are meant to keep our values to 16-bit integers. `delta` is a fixed integer.
-Note that `ror(0, 4)` and `rol(0,5)` are still `0` (this is the reason why we chose to look at `(0,0)` earlier.
+Note that `ror(0, 4)` and `rol(0, 5)` are still `0` (this is the reason why we chose to look at `(0, 0)` earlier.
 Simplifying further, we have 
 ```py
 res = mod((0 ^ 0 ^ k1) + 0) ^ mod(k2 + 0 + delta)
@@ -122,18 +122,18 @@ k1 = res ^ mod(k2 + delta)
 
 Thus given a value of `res` we are testing, if we try a value of `k2`,  `k1` is basically determined for us (else we will not get the correct value of `res` from `F`).
 
-Given a guess of the keys `k1` and `k2`, we can then check against the encryption of `(0,0)` and see if the output is identical, which will indicate that we have found the correct key. 
+Given a guess of the keys `k1` and `k2`, we can then check against the encryption of `(0, 0)` and see if the output is identical, which will indicate that we have found the correct key. 
 
 
 Our solution steps are follows:
 
-1. Guess the value of `res` such that $F(0,0) = (0, res)$.
-2. To check if our value of `res` is reasonable, we need $\text{encrypt}(0,0)\text{.r} = \text{encrypt}(0,x)\text{.l}$
+1. Guess the value of `res` such that $F(0,0) = (0, \text{res})$.
+2. To check if our value of `res` is reasonable, we need $\text{encrypt}(0,0)\text{.r} = \text{encrypt}(0,\text{res})\text{.l}$
 3. If our value of `res` is reasonable, guess a value of `k2` and get the corresponding value of `k1`. 
 4. Using these values `k1` and `k2` as our key, test if $\text{encrypt}(0,0)$(done locally) is the same as what the server tells us.
 5. If they are the same, submit `key = (k1<<16) + k2` to the server to get our flag.
 
-Note that we can just query all values of `encrypt(0,x)` from the server before proceeding with our solution.
+Note that we can just query all values of `encrypt(0, x)` from the server before proceeding with our solution.
 This reduces the back-and-forth interaction with the server, saving us time.
 
 In total, this takes us exactly 65536 queries to the server, which is under the limit of 100000. The total number of possible keys `(k1, k2)` we check is also a small multiple of 65536, which will run in time. 
@@ -165,7 +165,7 @@ def encrypt(num, key):
 	return l, r
 
 
-def SPLIT(x): # splits a 32-bit integer into two 16-bit halves.
+def split_32(x): # splits a 32-bit integer into two 16-bit halves.
 	return (x>>16), (x&0xffff)
 
 r = remote("157.245.52.169",32189) # challenge server
@@ -184,7 +184,7 @@ for i in range(65536):
 	r.readline()
 	enc[i] = int(r.readline().decode().strip().split("=")[-1]) 
 	# split the responses into 16-bit halves
-	enc[i] = SPLIT(enc[i]) 
+	enc[i] = split_32(enc[i]) 
 
 for res in range(1, 65536):
 	
