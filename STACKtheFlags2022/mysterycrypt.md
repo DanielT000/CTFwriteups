@@ -56,6 +56,7 @@ for i in range(100000):
 Looking at the source, we have an `encrypt` function, which seems to apply `round` to our input 128 times, using two keys `k1` and `k2`. 
 
 We are allowed to query for the encryption of any 32-bit integer, up to 100000 queries. 
+
 If we manage to guess `key = (k1<<16) + k2` correctly, we will get the flag. 
 
 The 32-bit integer input we provide is split into two halves `l` and `r` (the upper and lower 16-bits respectively) in the `encrypt` function. 
@@ -68,17 +69,21 @@ def round(l, r, k1, k2):
     return (r, l ^ res)
 ```
 The function derives some number `res` from `r`, `k1` and `k2` and XORs it with `l` to give a new number, before swapping the two when returning.
+
 Briefly, 
 $$F(l,r) = (r, l \oplus \text{res})$$ where $\oplus$ denotes the XOR operator. How `res` is derived does not matter too much at this point.
 
 
-Importantly, with the input `(l, r)` is linked to the output `F(l, r)` (the value of `r` is unchanged, just moved). However, since `encrypt` does `F` 128 times, we still do not know anything about the output of `encrypt` given an input.
+Importantly, with the input `(l, r)` is linked to the output `F(l, r)` (the value of `r` is unchanged, just moved). 
+
+However, since `encrypt` does `F` 128 times, we still do not know anything about the output of `encrypt` given an input.
 
 ### Part 1
 
 Let us consider $F(0,0)$. The notation is slightly inaccurate for brevity; technically I am supposed to write $F((0, 0))$ instead of $F(0, 0)$.
 
 We have $F(0, 0) = (0, \text{res})$ from earlier, since $0 \oplus \text{res} = \text{res}$.
+
 This gives us $2^{16} = 65536$ possible values of `res` to try, and we are guaranteed that one of them is the correct output of $F(0, 0)$. Let this value of `res` be `x`.
 
 Now that we have $(0, x) = F(0, 0)$, let us look at what happens if we encrypt `(0, x)`. Since `encrypt` calls `F` 128 times on our input, we have:
@@ -95,7 +100,9 @@ $$
 
 So, similarly to how $(0, 0)$ and $F(0,0) = (0,x)$ are linked, we now know there is a link between $\text{encrypt}(0,0)$ and $\text{encrypt}(0,x)$, namely that $$\text{encrypt}(0,0)\text{.r} = \text{encrypt}(0,x)\text{.l}$$
 
-This condition gives us a good way to check if our value of `res` guessed is a correct value. While this could also happen out of pure luck, the chance of this happening is $\frac{1}{2^{16}}$, so the number of false positives will be low. 
+This condition gives us a good way to check if our value of `res` guessed is a correct value. 
+
+While this could also happen out of pure luck, the chance of this happening is $\frac{1}{2^{16}}$, so the number of false positives will be low. 
 
 ### Part 2
 
@@ -105,7 +112,9 @@ res = mod((ror(r,4) ^ rol(r,5) ^ k1) + r) ^ mod(k2 + r + delta)
 ```
 
 where `ror` and `rol` are "rotating" kind of functions, and the `mod` functions are meant to keep our values to 16-bit integers. `delta` is a fixed integer.
-Note that `ror(0, 4)` and `rol(0, 5)` are still `0` (this is the reason why we chose to look at `(0, 0)` earlier.
+
+Note that `ror(0, 4)` and `rol(0, 5)` are still `0` (this is the reason why we chose to look at `(0, 0)` earlier).
+
 Simplifying further, we have 
 ```py
 res = mod((0 ^ 0 ^ k1) + 0) ^ mod(k2 + 0 + delta)
@@ -134,9 +143,12 @@ Our solution steps are follows:
 5. If they are the same, submit `key = (k1<<16) + k2` to the server to get our flag.
 
 Note that we can just query all values of `encrypt(0, x)` from the server before proceeding with our solution.
+
 This reduces the back-and-forth interaction with the server, saving us time.
 
-In total, this takes us exactly 65536 queries to the server, which is under the limit of 100000. The total number of possible keys `(k1, k2)` we check is also a small multiple of 65536, which will run in time. 
+In total, this takes us exactly 65536 queries to the server, which is under the limit of 100000. 
+
+The total number of possible keys `(k1, k2)` we check is also a small multiple of 65536, which will run in time. 
 
 ### Solve script:
 ```py
